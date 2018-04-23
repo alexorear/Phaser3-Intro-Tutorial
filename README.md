@@ -25,6 +25,22 @@ This will run a server so that your game will nun in the browser in a browser. T
 
 Open your browser and enter `localhost:3000`
 
+## Controls
+left/right arrow keys: left/right
+up arrow key: jump
+
+#### XInput Support
+
+One feature included in this example that is not found in the original tutorial is support for XBox 360 style controls. When a controller is connect, the keyboard controls are disabled.
+
+D-Pad left/right: left/right
+Left Analog stick: left/right
+A Button: jumb
+
+NOTE: This has only currently been tested with the 8Bitdo NES30 PRO.
+
+
+
 ## Development Build
 
 Run: `npm run deploy`
