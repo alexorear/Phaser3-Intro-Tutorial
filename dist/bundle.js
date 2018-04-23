@@ -10990,7 +10990,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_phaser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_phaser__);
 
 
-let config = {
+var config = {
 	type: Phaser.AUTO,
 	width: 800,
 	height: 600,
@@ -11010,6 +11010,9 @@ let config = {
 
 // eslint-disable-next-line
 var game = new Phaser.Game(config);
+var cursors;
+var platforms;
+var player;
 
 function preload() {
 	this.load.image('sky', 'assets/sky.png');
@@ -11023,14 +11026,14 @@ function create() {
 	this.add.image(0, 0, 'sky').setOrigin(0, 0);
 
 	// level platforms
-	let platforms = this.physics.add.staticGroup();
+	platforms = this.physics.add.staticGroup();
 	platforms.create(400, 568, 'ground').setScale(2).refreshBody();
 	platforms.create(600, 400, 'ground');
 	platforms.create(50, 250, 'ground');
 	platforms.create(750, 220, 'ground');
 
 	// player character
-	let player = this.physics.add.sprite(100, 450, 'dude');
+	player = this.physics.add.sprite(100, 450, 'dude');
 	player.setBounce(0.2);
 	player.setCollideWorldBounds(true);
 
@@ -11053,9 +11056,26 @@ function create() {
 		frameRate: 10,
 		repeat: -1
 	});
+
+	// set collision between player and platforms
+	this.physics.add.collider(player, platforms);
+
+	// set user controlls
+	cursors = this.input.keyboard.createCursorKeys();
 }
 
-function update() {}
+function update() {
+	if (cursors.left.isDown) {
+		player.setVelocityX(-160);
+		player.anims.play('left', true);
+	} else if (cursors.right.isDown) {
+		player.setVelocityX(160);
+		player.anims.play('right', true);
+	} else {
+		player.setVelocityX(0);
+		player.anims.play('turn');
+	}
+}
 
 /***/ })
 ],[547]);
