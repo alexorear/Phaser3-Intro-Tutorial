@@ -1,8 +1,8 @@
-## Phaser3 v3.6.0 Boiler Plate
+## Phaser3 Platformer Tutorial
 
 #### Phaser3 + ES6 + Webpack
 
-This repository was created to provide a basic setup, easy to setup environment for creating Phaser3 games. This set is based on the Generic Platformer and Bootstrap Phaser Project by Niklas Berg (https://github.com/nkholski/phaser3-es6-webpack).
+This repository is based on the getting started tutorial found on Phaser.io. The dev environment for this project is based on the Generic Platformer and Bootstrap Phaser Project by Niklas Berg (https://github.com/nkholski/phaser3-es6-webpack).
 
 ## Setup
 You'll need to install a few things before you have a working project including coping this repo to a new project directory.
