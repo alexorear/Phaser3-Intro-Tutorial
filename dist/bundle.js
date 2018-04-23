@@ -10994,6 +10994,9 @@ var config = {
 	type: Phaser.AUTO,
 	width: 800,
 	height: 600,
+	input: {
+		gamepad: true
+	},
 	physics: {
 		default: 'arcade',
 		arcade: {
@@ -11010,6 +11013,7 @@ var config = {
 
 // eslint-disable-next-line
 var game = new Phaser.Game(config);
+var config;
 var cursors;
 var platforms;
 var player;
@@ -11062,18 +11066,37 @@ function create() {
 
 	// set user controlls
 	cursors = this.input.keyboard.createCursorKeys();
+	// set up gamepad config
+	config = Phaser.Input.Gamepad.Configs.XBOX_360;
 }
 
 function update() {
-	if (cursors.left.isDown) {
+
+	// check to see if gamepad is connected
+	if (this.input.gamepad.total !== 0) {
+		return;
+	}
+
+	// gamepad variables
+	var pad = this.input.gamepad.getPad(0);
+	var axisH = pad.axes[0].getValue();
+	var axisV = pad.axes[1].getValue();
+
+	// move character left/right with animation
+	if (cursors.left.isDown || axisH < 0 || pad.buttons[config.LEFT].pressed) {
 		player.setVelocityX(-160);
 		player.anims.play('left', true);
-	} else if (cursors.right.isDown) {
+	} else if (cursors.right.isDown || axisH > 0 || pad.buttons[config.RIGHT].pressed) {
 		player.setVelocityX(160);
 		player.anims.play('right', true);
 	} else {
 		player.setVelocityX(0);
 		player.anims.play('turn');
+	}
+
+	// character jump
+	if (cursors.up.isDown && player.body.touching.down || pad.buttons[config.A].pressed && player.body.touching.down) {
+		player.setVelocityY(-330);
 	}
 }
 

@@ -1,9 +1,12 @@
 import 'phaser';
 
-let config = {
+var config = {
 	type: Phaser.AUTO,
 	width: 800,
 	height: 600,
+	input: {
+		gamepad: true
+	},
 	physics: {
 		default: 'arcade',
 		arcade: {
@@ -20,6 +23,10 @@ let config = {
 
 // eslint-disable-next-line
 var game = new Phaser.Game(config);
+var config;
+var cursors;
+var platforms;
+var player;
 
 function preload() {
 	this.load.image('sky', 'assets/sky.png');
@@ -35,14 +42,14 @@ function create() {
 	this.add.image(0, 0, 'sky').setOrigin(0, 0);
 
 	// level platforms
-	let platforms = this.physics.add.staticGroup();
+	platforms = this.physics.add.staticGroup();
 	platforms.create(400, 568, 'ground').setScale(2).refreshBody();
 	platforms.create(600, 400, 'ground');
 	platforms.create(50, 250, 'ground');
 	platforms.create(750, 220, 'ground');
 
 	// player character
-	let player = this.physics.add.sprite(100, 450, 'dude');
+	player = this.physics.add.sprite(100, 450, 'dude');
 	player.setBounce(0.2);
 	player.setCollideWorldBounds(true);
 
@@ -66,8 +73,41 @@ function create() {
 		repeat: -1
 	});
 
+	// set collision between player and platforms
+	this.physics.add.collider(player, platforms);
+
+	// set user controlls
+	cursors = this.input.keyboard.createCursorKeys();
+	// set up gamepad config
+	config = Phaser.Input.Gamepad.Configs.XBOX_360;
 }
 
 function update() {
 
+	// check to see if gamepad is connected
+	if (this.input.gamepad.total !== 0) {
+		return;
+	}
+
+	// gamepad variables
+	var pad = this.input.gamepad.getPad(0);
+	var axisH = pad.axes[0].getValue();
+	var axisV = pad.axes[1].getValue();
+
+	// move character left/right with animation
+	if (cursors.left.isDown || axisH < 0 || pad.buttons[config.LEFT].pressed) {
+		player.setVelocityX(-160);
+		player.anims.play('left', true);
+	} else if (cursors.right.isDown || axisH > 0 || pad.buttons[config.RIGHT].pressed) {
+		player.setVelocityX(160);
+		player.anims.play('right', true);
+	} else {
+		player.setVelocityX(0);
+		player.anims.play('turn');
+	}
+
+	// character jump
+	if (cursors.up.isDown && player.body.touching.down || pad.buttons[config.A].pressed && player.body.touching.down) {
+		player.setVelocityY(-330);
+	}
 }
