@@ -23,6 +23,7 @@ var config = {
 
 var game = new Phaser.Game(config);
 
+var bombs;
 var config;
 var cursors;
 var platforms;
@@ -78,9 +79,6 @@ function create() {
 		repeat: -1
 	});
 
-	// set collision between player and platforms
-	this.physics.add.collider(player, platforms);
-
 	// star objects
 	stars = this.physics.add.group({
 		key: 'star',
@@ -92,11 +90,15 @@ function create() {
 		child.setBounceY(Phaser.Math.FloatBetween(.4, .8));
 	});
 
-	// set collision between stars and platforms
-	this.physics.add.collider(stars, platforms);
+	// bomb objects
+	bombs = this.physics.add.group();
 
-	// set collision between stars and player
+	// set collision/overlap detection
+	this.physics.add.collider(stars, platforms);
 	this.physics.add.overlap(player, stars, collectStar, null, this);
+	this.physics.add.collider(player, platforms);
+	this.physics.add.collider(bombs, platforms);
+	this.physics.add.collider(player, bombs, hitBomb, null, this);
 
 	// set user controlls
 	cursors = this.input.keyboard.createCursorKeys();
@@ -151,7 +153,28 @@ function update() {
 
 function collectStar(player, star) {
 	star.disableBody(true, true);
-
 	score += 1;
 	scoreText.setText(`Score: ${score}`);
+	releaseBomb();
+}
+
+function hitBomb(player, bomb) {
+	this.physics.pause();
+	player.setTint(0xFF0000);
+	player.anims.play('turn');
+	gameOver = true;
+}
+
+function releaseBomb() {
+	if (stars.countActive(true) === 0) {
+		stars.children.iterate((child) => {
+			child.enableBody(true, child.x, 0, true, true);
+		});
+
+		let x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+		let bomb = bombs.create(x, 16, 'bomb').setScale(2);
+		bomb.setCollideWorldBounds(true);
+		bomb.setBounceY(1);
+		bomb.allowGravity = true;
+	}
 }
