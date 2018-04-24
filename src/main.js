@@ -27,6 +27,7 @@ var config;
 var cursors;
 var platforms;
 var player;
+var stars;
 
 function preload() {
 	this.load.image('sky', 'assets/sky.png');
@@ -75,6 +76,23 @@ function create() {
 
 	// set collision between player and platforms
 	this.physics.add.collider(player, platforms);
+
+	// star objects
+	stars = this.physics.add.group({
+		key: 'star',
+		repeat: 11,
+		setXY: { x: 12, y: 0, stepX: 70 }
+	});
+
+	stars.children.iterate((child) => {
+		child.setBounceY(Phaser.Math.FloatBetween(.4, .8));
+	});
+
+	// set collision between stars and platforms
+	this.physics.add.collider(stars, platforms);
+
+	// set collision between stars and player
+	this.physics.add.overlap(player, stars, collectStar, null, this);
 
 	// set user controlls
 	cursors = this.input.keyboard.createCursorKeys();
@@ -125,5 +143,8 @@ function update() {
 			player.setVelocityY(-330);
 		}
 	}
+}
 
+function collectStar(player, star) {
+	star.disableBody(true, true);
 }
