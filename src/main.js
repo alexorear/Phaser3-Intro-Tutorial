@@ -21,12 +21,14 @@ var config = {
 	}
 };
 
-// eslint-disable-next-line
 var game = new Phaser.Game(config);
+
 var config;
 var cursors;
 var platforms;
 var player;
+var score = 0;
+var scoreText;
 var stars;
 
 function preload() {
@@ -49,6 +51,8 @@ function create() {
 	platforms.create(50, 250, 'ground');
 	platforms.create(750, 220, 'ground');
 
+	//set up scoring
+	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#FFF'});
 	// player character
 	player = this.physics.add.sprite(100, 450, 'dude');
 	player.setBounce(0.2);
@@ -147,4 +151,7 @@ function update() {
 
 function collectStar(player, star) {
 	star.disableBody(true, true);
+
+	score += 1;
+	scoreText.setText(`Score: ${score}`);
 }
