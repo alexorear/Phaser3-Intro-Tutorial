@@ -4,6 +4,7 @@ var config = {
 	type: Phaser.AUTO,
 	width: 800,
 	height: 600,
+	roundPixels: true,
 	input: {
 		gamepad: true
 	},
@@ -26,6 +27,8 @@ var game = new Phaser.Game(config);
 var bombs;
 var config;
 var cursors;
+var keySpace;
+var keyR;
 var platforms;
 var player;
 var score = 0;
@@ -40,17 +43,18 @@ function preload() {
 	this.load.spritesheet('dude', 'assets/dude.png',
 		{ frameWidth: 32, frameHeight: 48 }
 	);
+
+	this.load.image('outside_tiles', 'assets/outside_tiles.png');
+	this.load.tilemapTiledJSON('map', 'assets/test_tilemap.json');
 }
 
 function create() {
-	this.add.image(0, 0, 'sky').setOrigin(0, 0);
-
-	// level platforms
-	platforms = this.physics.add.staticGroup();
-	platforms.create(400, 568, 'ground').setScale(2).refreshBody();
-	platforms.create(600, 400, 'ground');
-	platforms.create(50, 250, 'ground');
-	platforms.create(750, 220, 'ground');
+	//tile tilemapTiledJSONthis.map = this.add.tilemap('level1');
+	this.map = this.add.tilemap('map');
+	var tileset = this.map.addTilesetImage('outside_tiles','outside_tiles');
+	this.backgroundLayer = this.map.createStaticLayer('background', tileset);
+	this.platformLayer = this.map.createStaticLayer('ground', tileset);
+	this.platformLayer.setCollision([174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 237, 238, 304, 305, 306, 307, 308, 309], true);
 
 	//set up scoring
 	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#FFF'});
@@ -94,14 +98,16 @@ function create() {
 	bombs = this.physics.add.group();
 
 	// set collision/overlap detection
-	this.physics.add.collider(stars, platforms);
+	this.physics.add.collider(stars, this.platformLayer);
 	this.physics.add.overlap(player, stars, collectStar, null, this);
-	this.physics.add.collider(player, platforms);
-	this.physics.add.collider(bombs, platforms);
+	this.physics.add.collider(player, this.platformLayer);
+	this.physics.add.collider(bombs, this.platformLayer);
 	this.physics.add.collider(player, bombs, hitBomb, null, this);
 
 	// set user controlls
 	cursors = this.input.keyboard.createCursorKeys();
+	keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+	keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
 	// set up gamepad config
 	config = Phaser.Input.Gamepad.Configs.XBOX_360;
 }
@@ -128,9 +134,14 @@ function update() {
 		}
 
 		// character jump
-		if (pad.buttons[config.A].pressed && player.body.touching.down) {
+		if (pad.buttons[config.A].pressed && player.body.blocked.down) {
 			player.setVelocityY(-330);
 		}
+
+		if (pad.buttons[config.BACK].pressed) {
+			this.scene.restart();
+		}
+
 	} else {
 		// move character left/right with animation
 		if (cursors.left.isDown) {
@@ -145,8 +156,12 @@ function update() {
 		}
 
 		// character jump
-		if (cursors.up.isDown && player.body.touching.down) {
+		if (keySpace.isDown && player.body.blocked.down) {
 			player.setVelocityY(-330);
+		}
+
+		if (keyR.isDown) {
+			this.scene.restart();
 		}
 	}
 }
@@ -162,7 +177,7 @@ function hitBomb(player, bomb) {
 	this.physics.pause();
 	player.setTint(0xFF0000);
 	player.anims.play('turn');
-	gameOver = true;
+	this.scene.start;
 }
 
 function releaseBomb() {
