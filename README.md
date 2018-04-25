@@ -2,21 +2,24 @@
 
 #### Phaser3 + ES6 + Webpack
 
-This repository is based on the getting started tutorial found on Phaser.io. The dev environment for this project is based on the Generic Platformer and Bootstrap Phaser Project by Niklas Berg (https://github.com/nkholski/phaser3-es6-webpack).
+This repository is based on the getting started tutorial found on Phaser.io with additional Phaser concepts explored and implemented. The dev environment for this project is based on the Generic Platformer and Bootstrap Phaser Project by Niklas Berg (https://github.com/nkholski/phaser3-es6-webpack).
+
+###### Tilemap
+The tilemap was created with Tiled (https://www.mapeditor.org/) using the Generic Platformer Tiles made by Surt (https://opengameart.org/content/generic-platformer-tiles).
 
 ## Setup
 You'll need to install a few things before you have a working project including coping this repo to a new project directory.
 
-### 1. Install node.js and npm:
+#### 1. Install node.js and npm:
 https://nodejs.org/en/
 
-### 2. Install Dependencies:
+#### 2. Install Dependencies:
 Navigate to the project folder.
 
 Run:
 `npm install` or `yarn`
 
-### 3. Run Development Server
+#### 3. Run Development Server
 
 Run:
 `npm run dev`
