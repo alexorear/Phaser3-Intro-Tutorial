@@ -1,4 +1,5 @@
 import 'phaser';
+import NinjaCat from './sprites/ninja-cat';
 
 var config = {
 	type: Phaser.AUTO,
@@ -25,24 +26,25 @@ var config = {
 var game = new Phaser.Game(config);
 
 var bombs;
-var config;
-var cursors;
-var keySpace;
-var keyR;
+var baddy;
+var enemies;
 var platforms;
-var player;
 var score = 0;
 var scoreText;
 var stars;
+var baddyVelocity = -100;
 
 function preload() {
 	this.load.image('sky', 'assets/sky.png');
 	this.load.image('ground', 'assets/platform.png');
 	this.load.image('star', 'assets/star.png');
 	this.load.image('bomb', 'assets/bomb.png');
-	this.load.spritesheet('dude', 'assets/dude.png',
+	this.load.spritesheet('ninjaCat', 'assets/cat.png',
 		{ frameWidth: 32, frameHeight: 48 }
 	);
+	this.load.spritesheet('blueBaddy', 'assets/blue_guy.png',
+	{ frameWidth: 32, frameHeight: 32}
+);
 
 	this.load.image('outside_tiles', 'assets/outside_tiles.png');
 	this.load.tilemapTiledJSON('map', 'assets/test_tilemap.json');
@@ -52,34 +54,58 @@ function create() {
 	//tile tilemapTiledJSONthis.map = this.add.tilemap('level1');
 	this.map = this.add.tilemap('map');
 	var tileset = this.map.addTilesetImage('outside_tiles','outside_tiles');
+	this.skyLayer = this.map.createStaticLayer('sky', tileset);
 	this.backgroundLayer = this.map.createStaticLayer('background', tileset);
 	this.platformLayer = this.map.createStaticLayer('ground', tileset);
-	this.platformLayer.setCollision([174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 237, 238, 304, 305, 306, 307, 308, 309], true);
+	this.platformLayer.setCollision([169, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 237, 238, 304, 305, 306, 307, 308, 309], true);
 
 	//set up scoring
-	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#FFF'});
-	// player character
-	player = this.physics.add.sprite(100, 450, 'dude');
-	player.setBounce(0.2);
-	player.setCollideWorldBounds(true);
+	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000'});
+
+	// blue bad guys objects
+	// enemies = this.physics.add.group({
+	// 	key: 'blueEnemy',
+	// 	repeat: 1,
+	// 	setXY: { x: 12, y: 200, stepX: 350 },
+	// });
+	//
+	// enemies.children.iterate((enemy) => {
+	// 	enemy.setCollideWorldBounds(true);
+	// });
 
 	this.anims.create({
-		key: 'left',
-		frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+		key: 'enemyWalk',
+		frames: this.anims.generateFrameNumbers('blueBaddy', { start: 0, end: 5 }),
+		frameRate: 8,
+		repeat: true
+	});
+
+	// create NinjaCat
+	this.player = new NinjaCat({
+		scene: this,
+		key: 'ninjaCat',
+		x: 100,
+		y: this.sys.game.config.height - 120
+	});
+
+	this.anims.create({
+		key: 'walk',
+		frames: this.anims.generateFrameNumbers('ninjaCat', { start: 0, end: 3 }),
 		frameRate: 10,
 		repeat: -1
 	});
 
 	this.anims.create({
-		key: 'turn',
-		frames: [{ key: 'dude', frame: 4 }],
-		frameRate: 20
+		key: 'jump',
+		frames: this.anims.generateFrameNumbers('ninjaCat', { start: 4, end: 18 }),
+		frameRate: 8,
+		repeat: -1,
 	});
 
 	this.anims.create({
-		key: 'right',
-		frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
-		frameRate: 10,
+		key: 'stand',
+		frames: [ { key: 'ninjaCat', frame: 0 } ],
+		frameRate: 3,
 		repeat: -1
 	});
 
@@ -87,11 +113,7 @@ function create() {
 	stars = this.physics.add.group({
 		key: 'star',
 		repeat: 11,
-		setXY: { x: 12, y: 0, stepX: 70 }
-	});
-
-	stars.children.iterate((child) => {
-		child.setBounceY(Phaser.Math.FloatBetween(.4, .8));
+		setXY: { x: 12, y: 200, stepX: 70 }
 	});
 
 	// bomb objects
@@ -99,71 +121,25 @@ function create() {
 
 	// set collision/overlap detection
 	this.physics.add.collider(stars, this.platformLayer);
-	this.physics.add.overlap(player, stars, collectStar, null, this);
-	this.physics.add.collider(player, this.platformLayer);
+	this.physics.add.overlap(this.player, stars, collectStar, null, this);
+	this.physics.add.collider(this.player, this.platformLayer);
+	// this.physics.add.collider(enemies, this.platformLayer);
 	this.physics.add.collider(bombs, this.platformLayer);
-	this.physics.add.collider(player, bombs, hitBomb, null, this);
+	this.physics.add.collider(this.player, bombs, hitBomb, null, this);
 
 	// set user controlls
-	cursors = this.input.keyboard.createCursorKeys();
-	keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-	keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+	this.keys = {
+		reset: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R),
+		jump: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+		left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
+		right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
+	};
 	// set up gamepad config
-	config = Phaser.Input.Gamepad.Configs.XBOX_360;
+	this.padConfig = Phaser.Input.Gamepad.Configs.XBOX_360;
 }
 
 function update() {
-
-	// check to see if gamepad is connected
-	if (this.input.gamepad.total !== 0) {
-		// gamepad variables
-		var pad = this.input.gamepad.getPad(0);
-		var axisH = pad.axes[0].getValue();
-		var axisV = pad.axes[1].getValue();
-
-		// move character left/right with animation
-		if (axisH < 0 || pad.buttons[config.LEFT].pressed) {
-			player.setVelocityX(-160);
-			player.anims.play('left', true);
-		} else if (axisH > 0 || pad.buttons[config.RIGHT].pressed) {
-			player.setVelocityX(160);
-			player.anims.play('right', true);
-		} else {
-			player.setVelocityX(0);
-			player.anims.play('turn');
-		}
-
-		// character jump
-		if (pad.buttons[config.A].pressed && player.body.blocked.down) {
-			player.setVelocityY(-330);
-		}
-
-		if (pad.buttons[config.BACK].pressed) {
-			this.scene.restart();
-		}
-
-	} else {
-		// move character left/right with animation
-		if (cursors.left.isDown) {
-			player.setVelocityX(-160);
-			player.anims.play('left', true);
-		} else if (cursors.right.isDown) {
-			player.setVelocityX(160);
-			player.anims.play('right', true);
-		} else {
-			player.setVelocityX(0);
-			player.anims.play('turn');
-		}
-
-		// character jump
-		if (keySpace.isDown && player.body.blocked.down) {
-			player.setVelocityY(-330);
-		}
-
-		if (keyR.isDown) {
-			this.scene.restart();
-		}
-	}
+	this.player.update(this.padConfig, this.keys);
 }
 
 function collectStar(player, star) {
@@ -186,10 +162,11 @@ function releaseBomb() {
 			child.enableBody(true, child.x, 0, true, true);
 		});
 
-		let x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
-		let bomb = bombs.create(x, 16, 'bomb').setScale(2);
-		bomb.setCollideWorldBounds(true);
-		bomb.setBounceY(1);
-		bomb.allowGravity = true;
+		let x = (player.x < 400) ? Phaser.Math.Between(401, 775) : Phaser.Math.Between(25, 400);
+		let y = (player.y < 300) ? Phaser.Math.Between(251, 500) : Phaser.Math.Between(0, 250);
+		let bombs = bombs.create(x, y, 'bomb').setScale(3);
+		bombs.setCollideWorldBounds(true);
+		bombs.setBounceY(1);
+		bombs.allowGravity = true;
 	}
 }
