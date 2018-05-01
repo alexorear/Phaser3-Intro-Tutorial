@@ -1,4 +1,5 @@
 import 'phaser';
+import BlueSpikey from './sprites/blue-spikey';
 import NinjaCat from './sprites/ninja-cat';
 
 var config = {
@@ -27,7 +28,6 @@ var game = new Phaser.Game(config);
 
 var bombs;
 var baddy;
-var enemies;
 var platforms;
 var score = 0;
 var scoreText;
@@ -42,7 +42,7 @@ function preload() {
 	this.load.spritesheet('ninjaCat', 'assets/cat.png',
 		{ frameWidth: 32, frameHeight: 48 }
 	);
-	this.load.spritesheet('blueBaddy', 'assets/blue_guy.png',
+	this.load.spritesheet('blueSpikey', 'assets/blue_guy.png',
 	{ frameWidth: 32, frameHeight: 32}
 );
 
@@ -62,20 +62,23 @@ function create() {
 	//set up scoring
 	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000'});
 
-	// blue bad guys objects
-	// enemies = this.physics.add.group({
-	// 	key: 'blueEnemy',
-	// 	repeat: 1,
-	// 	setXY: { x: 12, y: 200, stepX: 350 },
-	// });
-	//
-	// enemies.children.iterate((enemy) => {
-	// 	enemy.setCollideWorldBounds(true);
-	// });
+	// create blue Blue Spikey
+	let enemyPosision = [{x: 608, y: 64}, {x: 128, y: 240}, {x: 512, y: 336}, {x: 512, y: 512}]
+	this.enemyGroup = this.add.group();
+	enemyPosision.forEach((enemy) => {
+		let newEnemy;
+		newEnemy = new BlueSpikey({
+			scene: this,
+			key: 'blueSpikey',
+			x: enemy.x,
+			y: enemy.y,
+		})
+		this.enemyGroup.add(newEnemy);
+	})
 
 	this.anims.create({
 		key: 'enemyWalk',
-		frames: this.anims.generateFrameNumbers('blueBaddy', { start: 0, end: 5 }),
+		frames: this.anims.generateFrameNumbers('blueSpikey', { start: 0, end: 5 }),
 		frameRate: 8,
 		repeat: true
 	});
@@ -123,7 +126,7 @@ function create() {
 	this.physics.add.collider(stars, this.platformLayer);
 	this.physics.add.overlap(this.player, stars, collectStar, null, this);
 	this.physics.add.collider(this.player, this.platformLayer);
-	// this.physics.add.collider(enemies, this.platformLayer);
+	this.physics.add.collider(this.enemyGroup, this.platformLayer);
 	this.physics.add.collider(bombs, this.platformLayer);
 	this.physics.add.collider(this.player, bombs, hitBomb, null, this);
 
@@ -140,6 +143,10 @@ function create() {
 
 function update() {
 	this.player.update(this.padConfig, this.keys);
+	this.enemyGroup.children.entries.forEach((enemy) => {
+		enemy.update();
+	})
+	// this.blueSpikey.update();
 }
 
 function collectStar(player, star) {

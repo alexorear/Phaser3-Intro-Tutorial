@@ -3,6 +3,7 @@ export default class NinjaCat extends Phaser.GameObjects.Sprite {
 		super(config.scene, config.x, config.y, config.key);
 		config.scene.physics.world.enable(this);
 		config.scene.add.existing(this);
+		this.body.setCollideWorldBounds(true);
 		this.wasHurt = -1;
 	}
 
@@ -52,7 +53,7 @@ export default class NinjaCat extends Phaser.GameObjects.Sprite {
 			// reset scene with keyboard
 			if (keys.reset.isDown) {
 				// score = 0;
-				this.scene.start();
+				this.scene.scene.restart();
 			}
 		}
 
