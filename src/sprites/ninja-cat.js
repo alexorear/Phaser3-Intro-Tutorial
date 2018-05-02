@@ -5,6 +5,7 @@ export default class NinjaCat extends Phaser.GameObjects.Sprite {
 		config.scene.add.existing(this);
 		this.body.setCollideWorldBounds(true);
 		this.wasHurt = -1;
+		this.jumpCount = 0;
 	}
 
 	update(padConfig, keys) {
@@ -26,8 +27,11 @@ export default class NinjaCat extends Phaser.GameObjects.Sprite {
 			}
 
 			// character jump with gamepad
-			if (pad.buttons[padConfig.A].pressed && this.body.blocked.down) {
-				this.body.velocity.y = -330;
+			if (pad.buttons[padConfig.A].pressed && this.jumpCount < 10) {
+				this.jump();
+			}
+			if (this.body.blocked.down) {
+				this.jumpCount = 0;
 			}
 			// scene reset with gamepad
 			if (pad.buttons[padConfig.BACK].pressed) {
@@ -47,8 +51,11 @@ export default class NinjaCat extends Phaser.GameObjects.Sprite {
 			}
 
 			// character jump with keyboard
-			if (keys.jump.isDown && this.body.blocked.down) {
-				this.body.velocity.y = -330;
+			if (keys.jump.isDown && this.jumpCount < 10) {
+				this.jump();
+			}
+			if (this.body.blocked.down) {
+				this.jumpCount = 0;
 			}
 			// reset scene with keyboard
 			if (keys.reset.isDown) {
@@ -65,5 +72,10 @@ export default class NinjaCat extends Phaser.GameObjects.Sprite {
 		} else {
 			this.anims.play('stand', true);
 		}
+	}
+
+	jump() {
+		this.jumpCount += 1;
+		this.body.setVelocityY(-100 + -(this.jumpCount * 10));
 	}
 }
