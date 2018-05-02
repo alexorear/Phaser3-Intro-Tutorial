@@ -24,15 +24,13 @@ var config = {
 	}
 };
 
+// eslint-disable-next-line
 var game = new Phaser.Game(config);
 
 var bombs;
-var baddy;
-var platforms;
 var score = 0;
 var scoreText;
 var stars;
-var baddyVelocity = -100;
 
 function preload() {
 	this.load.image('sky', 'assets/sky.png');
@@ -43,8 +41,8 @@ function preload() {
 		{ frameWidth: 32, frameHeight: 48 }
 	);
 	this.load.spritesheet('blueSpikey', 'assets/blue_guy.png',
-	{ frameWidth: 32, frameHeight: 32}
-);
+		{ frameWidth: 32, frameHeight: 32}
+	);
 
 	this.load.image('outside_tiles', 'assets/outside_tiles.png');
 	this.load.tilemapTiledJSON('map', 'assets/test_tilemap.json');
@@ -56,14 +54,16 @@ function create() {
 	var tileset = this.map.addTilesetImage('outside_tiles','outside_tiles');
 	this.skyLayer = this.map.createStaticLayer('sky', tileset);
 	this.backgroundLayer = this.map.createStaticLayer('background', tileset);
+	this.platform_edges = this.map.createStaticLayer('platform_edge', tileset);
 	this.platformLayer = this.map.createStaticLayer('ground', tileset);
-	this.platformLayer.setCollision([169, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 237, 238, 304, 305, 306, 307, 308, 309], true);
+	this.platform_edges.setCollision([169], true);
+	this.platformLayer.setCollision([174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 237, 238, 304, 305, 306, 307, 308, 309], true);
 
 	//set up scoring
 	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000'});
 
 	// create blue Blue Spikey
-	let enemyPosision = [{x: 608, y: 64}, {x: 128, y: 240}, {x: 512, y: 336}, {x: 512, y: 512}]
+	let enemyPosision = [{x: 608, y: 64}, {x: 128, y: 240}, {x: 512, y: 336}, {x: 512, y: 512}];
 	this.enemyGroup = this.add.group();
 	enemyPosision.forEach((enemy) => {
 		let newEnemy;
@@ -72,9 +72,9 @@ function create() {
 			key: 'blueSpikey',
 			x: enemy.x,
 			y: enemy.y,
-		})
+		});
 		this.enemyGroup.add(newEnemy);
-	})
+	});
 
 	this.anims.create({
 		key: 'enemyWalk',
@@ -127,6 +127,7 @@ function create() {
 	this.physics.add.overlap(this.player, stars, collectStar, null, this);
 	this.physics.add.collider(this.player, this.platformLayer);
 	this.physics.add.collider(this.enemyGroup, this.platformLayer);
+	this.physics.add.collider(this.enemyGroup, this.platform_edges);
 	this.physics.add.collider(bombs, this.platformLayer);
 	this.physics.add.collider(this.player, bombs, hitBomb, null, this);
 
@@ -145,7 +146,7 @@ function update() {
 	this.player.update(this.padConfig, this.keys);
 	this.enemyGroup.children.entries.forEach((enemy) => {
 		enemy.update();
-	})
+	});
 	// this.blueSpikey.update();
 }
 
@@ -156,7 +157,7 @@ function collectStar(player, star) {
 	releaseBomb();
 }
 
-function hitBomb(player, bomb) {
+function hitBomb(player) {
 	this.physics.pause();
 	player.setTint(0xFF0000);
 	player.anims.play('turn');
@@ -169,8 +170,8 @@ function releaseBomb() {
 			child.enableBody(true, child.x, 0, true, true);
 		});
 
-		let x = (player.x < 400) ? Phaser.Math.Between(401, 775) : Phaser.Math.Between(25, 400);
-		let y = (player.y < 300) ? Phaser.Math.Between(251, 500) : Phaser.Math.Between(0, 250);
+		let x = (this.player.x < 400) ? Phaser.Math.Between(401, 775) : Phaser.Math.Between(25, 400);
+		let y = (this.player.y < 300) ? Phaser.Math.Between(251, 500) : Phaser.Math.Between(0, 250);
 		let bombs = bombs.create(x, y, 'bomb').setScale(3);
 		bombs.setCollideWorldBounds(true);
 		bombs.setBounceY(1);
