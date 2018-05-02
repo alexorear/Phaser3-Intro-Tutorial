@@ -54,6 +54,7 @@ function create() {
 	var tileset = this.map.addTilesetImage('outside_tiles','outside_tiles');
 	this.skyLayer = this.map.createStaticLayer('sky', tileset);
 	this.backgroundLayer = this.map.createStaticLayer('background', tileset);
+	this.platformLayer = this.map.createStaticLayer('ladder', tileset);
 	this.platform_edges = this.map.createStaticLayer('platform_edge', tileset);
 	this.platformLayer = this.map.createStaticLayer('ground', tileset);
 	this.platform_edges.setCollision([169], true);
