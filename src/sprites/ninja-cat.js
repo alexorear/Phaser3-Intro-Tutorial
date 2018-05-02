@@ -76,6 +76,6 @@ export default class NinjaCat extends Phaser.GameObjects.Sprite {
 
 	jump() {
 		this.jumpCount += 1;
-		this.body.setVelocityY(-100 + -(this.jumpCount * 10));
+		this.body.setVelocityY(-150 + -(this.jumpCount * 13));
 	}
 }
