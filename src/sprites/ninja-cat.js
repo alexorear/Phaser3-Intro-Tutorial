@@ -60,6 +60,7 @@ export default class NinjaCat extends Phaser.GameObjects.Sprite {
 			// reset scene with keyboard
 			if (keys.reset.isDown) {
 				// score = 0;
+				this.scene.scene.pause();
 				this.scene.scene.restart();
 			}
 		}
