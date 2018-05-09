@@ -37,6 +37,9 @@ function preload() {
 	this.load.spritesheet('blueSpikey', 'assets/blue_guy.png',
 		{ frameWidth: 32, frameHeight: 32}
 	);
+	this.load.spritesheet('climb', 'assets/cat_climb.png',
+		{ frameWidth: 32, frameHeight: 48 }
+	);
 
 	this.load.image('outside_tiles', 'assets/outside_tiles.png');
 	this.load.image('star_tile', 'assets/star_tile.png');
@@ -98,6 +101,13 @@ function create() {
 	});
 
 	this.anims.create({
+		key: 'catClimb',
+		frames: this.anims.generateFrameNumbers('climb', { start: 0, end: 1 }),
+		frameRate: 7,
+		repeat: -1
+	});
+
+	this.anims.create({
 		key: 'jump',
 		frames: this.anims.generateFrameNumbers('ninjaCat', { start: 4, end: 18 }),
 		frameRate: 8,
@@ -115,10 +125,13 @@ function create() {
 	this.physics.add.overlap(this.player, this.stars);
 	this.stars.setTileIndexCallback([3073], collectStar, this);
 
+	// platform object collision
 	this.physics.add.collider(this.player, this.platformLayer);
 	this.physics.add.collider(this.enemyGroup, this.platformLayer);
 	this.physics.add.collider(this.enemyGroup, this.platform_edges);
 
+	// player and enemy collider
+	this.physics.add.collider(this.player, this.enemyGroup, hitEnemy, null, this);
 	//tile callbacks
 	this.physics.add.overlap(this.player, this.ladder);
 	this.ladder.setTileIndexCallback([1583, 1584, 1647, 1648, 1711, 1712], climbLadder, this);
@@ -129,6 +142,7 @@ function create() {
 	// set user controlls
 	this.keys = {
 		reset: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R),
+		pause: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P),
 		jump: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
 		up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP),
 		down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
@@ -140,10 +154,22 @@ function create() {
 }
 
 function update() {
+	if (this.input.gamepad.total) {
+		this.pad = this.input.gamepad.getPad(0);
+		this.axisH = this.pad.axes[0].getValue();
+		this.axisV = this.pad.axes[1].getValue();
+	}
+
 	this.player.update(this.padConfig, this.keys);
 	this.enemyGroup.children.entries.forEach((enemy) => {
 		enemy.update();
 	});
+
+	// reset scene with keyboard
+	if (this.keys.reset.isDown) {
+		score = 0;
+		this.scene.restart();
+	}
 }
 
 function collectStar(player, tile) {
@@ -153,31 +179,69 @@ function collectStar(player, tile) {
 }
 
 function endOfLadderUp() {
-	if (this.keys.up.isDown) {
-		this.player.body.allowGravity = true;
-	} else if (this.keys.down.isDown) {
-		this.player.body.allowGravity = false;
-		this.player.body.y = this.player.body.y += .25;
+	// check to see if gamepad is connected
+	if (this.input.gamepad.total !== 0) {
+		if (this.axisV < 0 || this.pad.buttons[this.padConfig.UP].pressed) {
+			this.player.body.allowGravity = true;
+		} else if (this.axisV > 0 || this.pad.buttons[this.padConfig.DOWN].pressed) {
+			this.player.body.allowGravity = false;
+			this.player.body.y = this.player.body.y += .25;
+		}
+	} else {
+		if (this.keys.up.isDown) {
+			this.player.body.allowGravity = true;
+		} else if (this.keys.down.isDown) {
+			this.player.body.allowGravity = false;
+			this.player.body.y = this.player.body.y += .25;
+		}
 	}
 }
 
 function endOfLadderDown() {
-	if (this.keys.down.isDown) {
-		this.player.body.allowGravity = true;
-	} else if (this.keys.up.isDown) {
-		this.player.body.allowGravity = false;
-		this.player.body.y = this.player.body.y -= .25;
+	// check to see if gamepad is connected
+	if (this.input.gamepad.total !== 0) {
+		if (this.axisV > 0 || this.pad.buttons[this.padConfig.DOWN].pressed) {
+			this.player.body.allowGravity = true;
+		} else if (this.axisV < 0 || this.pad.buttons[this.padConfig.UP].pressed) {
+			this.player.body.allowGravity = false;
+			this.player.body.y = this.player.body.y -= .25;
+		}
+	} else {
+		if (this.keys.down.isDown) {
+			this.player.body.allowGravity = true;
+		} else if (this.keys.up.isDown) {
+			this.player.body.allowGravity = false;
+			this.player.body.y = this.player.body.y -= .25;
+		}
 	}
 }
 
 function climbLadder() {
-	if (this.keys.up.isDown) {
-		this.player.body.allowGravity = false;
-		this.player.body.y = this.player.body.y -= .25;
-	} else if (this.keys.left.isDown || this.keys.right.isDown) {
-		this.player.body.allowGravity = true;
-	} else if (this.keys.down.isDown && !this.player.body.blocked.down) {
-		this.player.body.allowGravity = false;
-		this.player.body.y = this.player.body.y += .25;
+	// check to see if gamepad is connected
+	if (this.input.gamepad.total !== 0) {
+		if (this.axisV < 0 || this.pad.buttons[this.padConfig.UP].pressed) {
+			this.player.body.allowGravity = false;
+			this.player.body.y = this.player.body.y -= .25;
+		} else if (this.axisH < 0 || this.pad.buttons[this.padConfig.LEFT].pressed || this.axisH > 0 || this.pad.buttons[this.padConfig.RIGHT].pressed) {
+			this.player.body.allowGravity = true;
+		} else if (this.axisV > 0 || this.pad.buttons[this.padConfig.DOWN].pressed) {
+			this.player.body.allowGravity = false;
+			this.player.body.y = this.player.body.y += .25;
+		}
+	} else {
+		if (this.keys.up.isDown) {
+			this.player.body.allowGravity = false;
+			this.player.body.y = this.player.body.y -= .25;
+		} else if (this.keys.left.isDown || this.keys.right.isDown) {
+			this.player.body.allowGravity = true;
+		} else if (this.keys.down.isDown && !this.player.body.blocked.down) {
+			this.player.body.allowGravity = false;
+			this.player.body.y = this.player.body.y += .25;
+		}
 	}
+}
+
+function hitEnemy() {
+	this.player.x = 100;
+	this.player.y = this.sys.game.config.height - 120;
 }
